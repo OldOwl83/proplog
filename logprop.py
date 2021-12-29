@@ -1,13 +1,15 @@
 '''
     Este módulo construye objetos del tipo 'Formula', que representan una fórmula
-de la Lógica Proposicional definida por su conectiva principal. A su vez, cada
-uno de estos objetos puede estar compuesto por otros objetos de su misma clase base,
-que representan sus subfórmulas (los que a su vez pueden estar compuestos por
-otros objetos, conformando un árbol de objetos 'Formula'). Esta ramificación
-concluye con las fórmulas atómicas o variables proposicionales ('F_ATOM(Formula)')
-cuyas únicas propiedades son un string que la identifica y un valor booleano que
-funciona como base para determinar el valor de las fórmulas compuestas (objetos
-'F_ATOM' con un mismo string siempre tienen el mismo valor booleano).
+de la Lógica Proposicional, pero siempre instanciados en alguna de sus subclases
+de acuerdo con su conectiva principal (F_CONJ, F_DISY, F_COND, F_NEG, F_DUP o F_ATOM).
+A su vez, cada uno de estos objetos puede estar compuesto por otros objetos de su
+misma clase base, que representan sus subfórmulas (los que a su vez pueden estar
+compuestos por otros objetos, conformando un árbol de objetos 'Formula'). Esta
+ramificación concluye con las fórmulas atómicas o variables proposicionales
+('F_ATOM(Formula)') cuyas únicas propiedades son un string que la identifica y
+un valor booleano que funciona como referencia para determinar el valor de las
+fórmulas compuestas (objetos 'F_ATOM' con un mismo nombre siempre tienen el mismo
+valor booleano).
     Estos objetos, por su parte, disponen de un método para calcular e imprimir
 por pantalla su tabla de verdad correspondiente.
 
@@ -15,11 +17,24 @@ Interfaz pública:
 
 Constructor:
         'FBF(string fbf)', donde fbf expresa una fórmula
-bien formada de la Lógica Proposicional en texto plano.
+        bien formada de la Lógica Proposicional en texto plano.
 
 Métodos:
         'FBF.Generar_tabla('), calcula e imprime por pantalla la tabla de verdad
-correspondiente.
+        correspondiente.
+
+Operadores:
+        "*", devuelve la conjunción de dos objetos "Formula", o de un objeto "Formula"
+        con un string que expresa una fórmula bien formada.
+        "+", devuelve la disyunción de dos objetos "Formula", o de un objeto "Formula"
+        con un string que expresa una fórmula bien formada.
+        "-", devuelve una fórmula resultante de eliminar el operando derecho del
+        izquierdo (el operando derecho sólo puede ser una subfórmula del izquierdo).
+        "[0/1]", el índice 0 refiere a la primera subfórmula de la fórmula indexada,
+        mientras que el índice 1 refiere a la segunda subfórmula, si la hubiere.
+        Mediante estos índices puede accederse a las subfórmulas tanto para leerlas
+        como para reemplazarlas, ya sea por otra fórmula, o por un string que exprese
+        una fórmula bien formada.
 
 Sintaxis para los string que expresan las fórmulas:
 
@@ -29,11 +44,12 @@ Operadores:
             Implicación: ->
             Negación: !
 
-    No hay un orden de precedencia entre los operadores, de modo que debe gestionar toda la sintaxis de las fórmulas con el uso de paréntesis "()".
+    No hay un orden de precedencia entre los operadores, de modo que se debe gestionar
+    toda la sintaxis de las fórmulas con el uso de paréntesis "()".
 '''
 
 #Librerías utilizadas
-from re import fullmatch
+from re import fullmatch, match, sub as subst
 from pandas import DataFrame
 from pandas import options
 
@@ -43,7 +59,7 @@ options.display.max_columns = 40
 options.display.width = 120
 
 '''
-Clase general: aunque técnicamente no es la clase base de los objetos que
+Clase instanciadora: aunque técnicamente no es la clase base de los objetos que
 representan las fórmulas proposicionales, en la práctica funciona como tal,
 ya que es la que debe ser llamada por el cliente para generar tal tipo de
 objetos. Como parámetro recibe un string en que se expresa una fórmula bien
@@ -141,6 +157,7 @@ class FBF:
 La superclase que engloba a la fórmula principal y sus subfórmulas. Todas ellas serán, en realidad, instancias de las subclases especiales (F_CONJ, F_DISY, etc.). Sin embargo, en esta clase se definen los métodos comunes, incluyendo su constructor.
 '''
 class Formula:
+
     def __init__(self, subf1, subf2=None):
         self._subform1 = FBF(subf1) #Todas las subfórmulas están compuestas por al menos otra subfórmula, salvo las atómicas (F_ATOM), que tienen un constructor especial
         if subf2:
@@ -151,7 +168,59 @@ class Formula:
     def __str__(self): pass #El casting a string se define de manera particular en las subclases
 
     def __repr__(self):
-        return "FBF('{}')".format(str(self))
+        return "FBF('{}')".format(str(self)) #Devuelve la expresión con la que el cliente puede construir una copia del objeto.
+
+#Acceso a las subfórmulas mediante índices 0 y 1
+    def __getitem__(self, index):
+        if index == 0: return self._subform1
+        elif index == 1 and self._subform2: return self._subform2
+        else: raise IndexError("Índice fuera del rango de subfórmulas.")
+
+#Reemplazo de las subfórmulas mediante índices
+    def __setitem__(self, index, other):
+        if "Formula" in str(type(other).__bases__): #Reemplazo por otro objeto "Formula"
+            if index == 0: self._subform1 = other
+            elif index == 1 and self._subform2: self._subform2 = other
+            else: raise IndexError("Índice fuera del rango de subfórmulas.")
+
+        elif type(other) == str: #Reemplazo por un string
+            if index == 0: self._subform1 = FBF(other)
+            elif index == 1 and self._subform2: self._subform2 = FBF(other)
+            else: raise IndexError("Índice fuera del rango de subfórmulas.")
+
+        else: raise TypeError("La subfórmulas sólo pueden ser otras fórmulas o strings que representen fórmulas.")
+
+#Conjunción de fórmulas mediante el operador "*"
+    def __mul__(self, other):
+        if "Formula" in str(type(other).__bases__): return F_CONJ(subst("^\(.+\)$", str(self)[1:-1], str(self)), subst("^\(.+\)$", str(other)[1:-1], str(other))) #Conjunción con un objeto "Formula"
+
+        elif type(other) == str: return F_CONJ(subst("^\(.+\)$", str(self)[1:-1], str(self)), other) #Conjunción con un string
+
+        else: raise TypeError("La fórmulas sólo pueden ser conjuntadas con otras fórmulas o con strings que representen fórmulas.")
+
+#Conmutatividad del operador "*" con un string
+    def __rmul__(self, other):
+        if type(other) == str: return F_CONJ(other, subst("^\(.+\)$", str(self)[1:-1], str(self)))
+        else: raise TypeError("La fórmulas sólo pueden ser conjuntadas con otras fórmulas o con strings que representen fórmulas.")
+
+#Disyunción de fórmulas mediante el operador "+"
+    def __add__(self, other):
+        if "Formula" in str(type(other).__bases__): return F_DISY(subst("^\(.+\)$", str(self)[1:-1], str(self)), subst("^\(.+\)$", str(other)[1:-1], str(other))) #Disyunción con un objeto "Formula"
+
+        elif type(other) == str: return F_DISY(subst("^\(.+\)$", str(self)[1:-1], str(self)), other) #Disyunción con un string
+
+        else: raise TypeError("La fórmulas sólo pueden ser conjuntadas con otras fórmulas o con strings que representen fórmulas.")
+
+#Conmutatividad del operador "+" con un string
+    def __radd__(self, other):
+        if type(other) == str: return F_DISY(other, subst("^\(.+\)$", str(self)[1:-1], str(self)))
+        else: raise TypeError("La fórmulas sólo pueden ser conjuntadas con otras fórmulas o con strings que representen fórmulas.")
+
+#Eliminación de una subfórmula mediante el operador "-"
+    def __sub__ (self, other):
+        if other is self._subform1: return self._subform2
+        elif other is self._subform2: return self._subform1
+        else: raise ArithmeticError("A una fórmula sólo se le puede restar una de sus subfórmulas.")
 
 #Método que devuelve para cada subfórmula su nivel de profundidad en relación a la fórmula que lo llamó
     def _Devolver_profundidad(self):
@@ -291,6 +360,9 @@ class F_NEG(Formula):
         else:
             return False
 
+    def __sub__(self, other):
+        raise ArithmeticError("La resta no está definida para fórmulas unimembres.")
+
 
 class F_DUP(Formula):
 
@@ -303,6 +375,8 @@ class F_DUP(Formula):
         else:
             return False
 
+    def __sub__(self, other):
+        raise ArithmeticError("La resta no está definida para fórmulas unimembres. Puede intentar la operación para la subfórmula no redundante.")
 
 class F_ATOM(Formula):
 
@@ -316,6 +390,15 @@ class F_ATOM(Formula):
 
     #def Imprimir_arbol(self):
     #    print(self, end=" | ")
+
+    def __sub__(self, other):
+        raise ArithmeticError("La resta no está definida para fórmulas unimembres.")
+
+    def __getitem__(self, index):
+        raise IndexError("Las variables proposicionales no contienen subfórmulas.")
+
+    def __setitem__(self, index, subf):
+        raise IndexError("Las variables proposicionales no contienen subfórmulas.")
 
     def _Devolver_profundidad(self): #También la profundidad de F_ATOM se puede decir que es absoluta.
         return 1
