@@ -1,19 +1,21 @@
 import logprop as lp
 
-a = lp.Atom('x', False)
+p = lp.Atom('p')
 
-b = lp.Atom('y', True)
+q = lp.Atom('q')
 
-c = lp.Atom('x')
+r = lp.Atom('r')
 
-b.name = 'x'
 
-#a.truth_val = True
+g = ((p >> r) & q) >> (r >> q)
 
-print(a.name, ': ', a.truth_val)
+#g = lp.Impl(lp.Disj(a, b), lp.Conj(lp.Neg(lp.Conj(a, b)), a))
 
-print(b.name, ': ', b.truth_val)
 
-print(c.name, ': ', c.truth_val)
+print(f'{g}: {g.truth_val}')
 
-print(lp.Atom._existing_symvars)
+print(f'len g: {len(g)}')
+
+#f.truth_val = 3
+
+
