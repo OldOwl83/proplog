@@ -1,4 +1,5 @@
 import logprop as lp
+import old
 
 p = lp.Atom('p', True)
 
@@ -6,32 +7,25 @@ q = lp.Atom('q', False)
 
 r = lp.Atom('r', True)
 
-# %%
+fs = [
+    'p >> q',
+    '~p >> q',
+    '~(p) >> q',
+    '(~p) >> q',
+    '(~(p)) >> q',
+    '(p) >> ~q',
+    '(p) >> ~(q)',
+    '(p) >> ~(~q)',
+    '((p) & (~q)) | (p >> ~(~s))',
+    '(((p) & (~q)) | (p >> s))',
+    '(~(p) >> q) & ((q | s) & ((q) | s))'
+]
 
-f = ~(p & q >> r)
+for f in fs:
+    try:
+        print(f'{f.rjust(40)}   ---->   {str(lp.WFF.from_string(f)).ljust(40)}')
 
+    except:
+        print(f'{f.rjust(40)}   ---->   {"Error".ljust(40)}')
 
-print(f.truth_val)
-
-
-# %%
-s = lp.Atom('p', True, get_if_exists=True)
-
-g = ((q | (p >> r) & q)) >> (r >> s)
-
-#g = lp.Impl(lp.Disj(a, b), lp.Conj(lp.Neg(lp.Conj(a, b)), a))
-
-
-print(f'{g}: {g.truth_val}')
-
-print(f'len g: {len(g)}')
-
-print(g.get_depth())
-
-# print(p, ': ', p.truth_val)
-# print(q)
-# print(r)
-# print(p._existing_symvars)
-# print(s, ': ', s.truth_val)
-
-
+print(f"Viejo: {old.FBF('(!(p) -> q) & ((q | s) & ((q) | s))')}")

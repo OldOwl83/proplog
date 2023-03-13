@@ -145,83 +145,83 @@ class WFF:
     @staticmethod
     def from_string(wff_str: str):
 
-        #subforms = ["", "", ""] # Almacena los elementos componentes de la fórmula expresada en el string (subfórmula izq, conectiva/tipo, [subfórmula der])
-
         wff_str = wff_str.replace(' ', '')
 
-# Función para validar los elementos definidos por paréntesis exteriores. Esta función complementa el análisis hecho con las expresiones regulares, ya que las mismas no pueden controlar la paridad entre paréntesis izquierdos y derechos dentro de un elemento interno de la fórmula. Devuelve el elemento sin los paréntesis externos, o -1 si no es validado
-        def _get_parentheses(string: str):
-            left_p = 0  # Contadores de paréntesis izquierdos y derechos
-            right_p = 0
-            pos = 0 # Contador de ciclos
+        def _check_redundant_parentheses(string):
+            l_pars = 0  # Contadores de paréntesis izquierdos y derechos
+            r_pars = 0
 
-            if string[0] != '(' and string[-1] != ')': return -1
+            if string[0] != '(' or string[-1] != ')': 
+                return string
 
-            for char in string:
-                pos += 1
-                if char == '(': left_p += 1
+            for step, char in enumerate(string, 1):
+                if char == '(': 
+                    l_pars += 1
                 elif char == ')':
-                    right_p += 1
+                    r_pars += 1
                 # Cuando los paréntesis derechos son tantos como los izquierdos (pero más que cero), y coinciden con los extremos del elemento, se completó la validación
-                    if right_p == left_p and right_p > 0:
-                        if pos == len(string): 
+                    if r_pars == l_pars and r_pars > 0:
+                        if step == len(string): 
                             return string[1:-1]  # Devuelve el elemento sin paréntesis exteriores
                         else: 
-                            return -1 #Si el elemento es más largo, no está bien formado.
+                            return string #Si el elemento es más largo, no está bien formado.
+            return string
+        
+        wff_str = _check_redundant_parentheses(wff_str)
 
-            return -1
 
-#(Continúa "_Descomponer_string()")
-        #Busca determinar la estructura general de la fórmula, con expresiones regulares
+        if match := (
+            re.fullmatch(
+                "(~{0,1}\([A-Za-z()&|>~]+\))(&|>>|\|)(~{0,1}\([A-Za-z()&|>~]+\))", 
+                wff_str) or 
+            re.fullmatch(
+                "(~{0,1}\([A-Za-z()&|>~]+\))(&|>>|\|)(~{0,1}[A-Za-z]+)", 
+                wff_str) or 
+            re.fullmatch(
+                "(~{0,1}[A-Za-z]+)(&|>>|\|)(~{0,1}\([A-Za-z()&|>~]+\))", 
+                wff_str) or 
+            re.fullmatch(
+                "(~{0,1}[A-Za-z]+)(&|>>|\|)(~{0,1}[A-Za-z]+)", 
+                wff_str)
+        ):
+            match match.group(2):
+                case '>>':
+                    connector = Impl
+                case '&':
+                    connector = Conj
+                case '|':
+                    connector = Disj
+
+            return connector(
+                WFF.from_string(
+                    match.group(1)[1:-1] 
+                        if match.group(1).startswith('(') else match.group(1)
+                ), 
+                WFF.from_string(
+                    match.group(3)[1:-1] 
+                        if match.group(3).startswith('(') else match.group(3)
+                )
+            )
 
         #Pregunta si la fórmula es una variable proposicional aislada
-        if re.fullmatch("[A-Za-z]+", wff_str):
-            return Atom(wff_str, get_if_exists=True)
+        elif match := re.fullmatch("\({0,1}([A-Za-z]+)\){0,1}", wff_str):
+            return Atom(match.group(1), get_if_exists=True)
 
         #Pregunta si la fórmula es una negación
-        elif (
-            re.fullmatch("![A-Za-z]+", wff_str) or 
-            (
-                re.fullmatch("!\([A-Za-z()&|\->!]+\)", wff_str) and 
-                _get_parentheses(wff_str[1:]) != -1 and 
-                len(_get_parentheses(wff_str[1:])) + 3 == len(wff_str)
-            )
+        elif match := (
+            re.fullmatch("~([A-Za-z]+)", wff_str) or
+            re.fullmatch("~\(([A-Za-z]+)\)", wff_str) or
+            re.fullmatch("~\(([A-Za-z()&|>~]+)\)", wff_str)
         ):
-            return Neg(wff_str[2:-1] if wff_str[1] == '(' else wff_str[1:])
-            
-        #Pregunta si la fórmula está compuesta por dos subfórmulas coordinadas por una conectiva central
-        else:
-            fr_patt = re.fullmatch(
-                "^(!{0,1}\([A-Za-z()&|\->!]+\))(&|->|\|)(!{0,1}\([A-Za-z()&|\->!]+\))$", 
-                wff_str) or re.fullmatch(
-                "^(!{0,1}\([A-Za-z()&|\->!]+\))(&|->|\|)(!{0,1}[A-Za-z]+)$", 
-                wff_str) or re.fullmatch(
-                "^(!{0,1}[A-Za-z]+)(&|->|\|)(!{0,1}\([A-Za-z()&|\->!]+\))$", 
-                wff_str) or re.fullmatch(
-                "^(!{0,1}[A-Za-z]+)(&|->|\|)(!{0,1}[A-Za-z]+)$", wff_str)
-            #Registra los tres elementos en la lista 'subforms', validando los elementos que están encerrados entre paréntesis (los demás ya son controlados por las expresiones regulares)
-            if fr_patt:
-                if fr_patt.group(1)[0] == '(':
-                    subforms[0] = _get_parentheses(fr_patt.group(1))
-                    if subforms[0] == -1: return -1
-                else:
-                    subforms[0] = fr_patt.group(1)
-
-                if fr_patt.group(3)[0] == '(':
-                    subforms[2] = _get_parentheses(fr_patt.group(3))
-                    if subforms[2] == -1: return -1
-                else:
-                    subforms[2] = fr_patt.group(3)
-
-                subforms[1] = fr_patt.group(2)
-
+            return Neg(WFF.from_string(match.group(1)))     
             #Pregunta si la fórmula es una duplicación con paréntesis externos redundantes
-            elif re.fullmatch("\([A-Za-z()&|\->!]+\)", wff_str):
-                subforms[0] = wff_str[1:-1]
-                subforms[1] = '0'
-            else: return -1
-
-        return subforms
+        elif re.fullmatch("\([A-Za-z()&|>~]+\)", wff_str):
+            # subforms[0] = wff_str[1:-1]
+            # subforms[1] = '0'
+            return WFF.from_string(wff_str[1:-1])
+        
+        else:
+            raise ValueError(f'"{wff_str}" is not a WFF string representation.')
 
 
 class Impl(WFF):
@@ -305,8 +305,8 @@ class Atom(WFF):
             truth_val: bool|None=None, 
             get_if_exists: bool=False
     ) -> 'Atom':
-        if get_if_exists and name in Atom._existing_symvars.keys():
-            return Atom._existing_symvars[name]
+        if get_if_exists:
+            return Atom._existing_symvars.pop(name, super().__new__(cls))
         else:
             return super().__new__(cls)
     
@@ -317,9 +317,7 @@ class Atom(WFF):
             truth_val: bool|None=None, 
             get_if_exists: bool=False
     ) -> None:
-        if not get_if_exists:
-            self.name = name
-        
+        self.name = name    
         self.truth_val = truth_val
 
 
