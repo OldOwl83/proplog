@@ -12,13 +12,15 @@ fs = [
     '~p >> q',
     '~(p) >> q',
     '(~p) >> q',
-    '(~(p)) >> q',
+    '((~(p)) >> q)',
     '(p) >> ~q',
     '(p) >> ~(q)',
     '(p) >> ~(~q)',
     '((p) & (~q)) | (p >> ~(~s))',
     '(((p) & (~q)) | (p >> s))',
-    '(~(p) >> q) & ((q | s) & ((q) | s))'
+    '(~(p) >> q) & (q | s) & ((q) | s)',
+
+    '(p) & ~(q) & (s)'
 ]
 
 for f in fs:
@@ -28,4 +30,4 @@ for f in fs:
     except:
         print(f'{f.rjust(40)}   ---->   {"Error".ljust(40)}')
 
-print(f"Viejo: {old.FBF('(!(p) -> q) & ((q | s) & ((q) | s))')}")
+#print(f"Viejo: {old.FBF('(!(p) -> q) & ((q | s) & ((q) | s))')}")
