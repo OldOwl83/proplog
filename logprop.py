@@ -148,35 +148,32 @@ class WFF:
 
 
         def break_down_parentheses(string: str):
-            if not ((string.startswith('(') or string.startswith('~('))
-                and string.endswith(')')):
-                return '--NO MATCH--'
-            
-            l_pars = r_pars = 0
+            if re.fullmatch('~*\([A-Za-z()&|>~]+\)', string):            
+                l_pars = r_pars = 0
 
-            for index, char in enumerate(wff_str, 0):
-                if char == '(': 
-                    l_pars += 1
-                elif char == ')':
-                    r_pars += 1
-    
-                if r_pars == l_pars and r_pars > 0:
-                    l_wff = wff_str[:index + 1]
-                    break
-
-            l_pars = r_pars = 0
-
-            for index, char in enumerate(wff_str[index + 1:], index + 1):
-                if char == '(': 
-                    l_pars += 1
-                elif char == ')':
-                    r_pars += 1
-                
-                if r_pars == l_pars and r_pars > 0:
-                    if index + 1 == len(wff_str):
-                        return l_wff
-                    else:
+                for index, char in enumerate(wff_str, 0):
+                    if char == '(': 
+                        l_pars += 1
+                    elif char == ')':
+                        r_pars += 1
+        
+                    if r_pars == l_pars and r_pars > 0:
+                        l_wff = wff_str[:index + 1]
                         break
+
+                l_pars = r_pars = 0
+
+                for index, char in enumerate(wff_str[index + 1:], index + 1):
+                    if char == '(': 
+                        l_pars += 1
+                    elif char == ')':
+                        r_pars += 1
+                    
+                    if r_pars == l_pars and r_pars > 0:
+                        if index + 1 == len(wff_str):
+                            return l_wff
+                        else:
+                            break
             
             return '--NO MATCH--'
 
@@ -188,26 +185,19 @@ class WFF:
         ):
             return Atom(match.group(1), get_if_exists=True)
 
-        # Pregunta si la fórmula es una negación
-        elif match := (
-            re.fullmatch("~([A-Za-z]+)", wff_str) or
-            #re.fullmatch("~\(([A-Za-z]+)\)", wff_str) or
-            re.fullmatch("~\(([A-Za-z()&|>~]+)\)", wff_str)
-        ):
-            return Neg(WFF.from_string(match.group(1)))   
-    
+        # Examina fórmulas bimembres
         elif match := (
             re.fullmatch(
-                "(~{0,1}\([A-Za-z()&|>~]+\))(&|>>|\|)(~{0,1}[A-Za-z]+)", 
+                "(~*\([A-Za-z()&|>~]+\))(&|>>|\|)(~*[A-Za-z]+)", 
                 wff_str) or 
             re.fullmatch(
-                "(~{0,1}[A-Za-z]+)(&|>>|\|)(~{0,1}\([A-Za-z()&|>~]+\))", 
+                "(~*[A-Za-z]+)(&|>>|\|)(~*\([A-Za-z()&|>~]+\))", 
                 wff_str) or 
             re.fullmatch(
-                "(~{0,1}[A-Za-z]+)(&|>>|\|)(~{0,1}[A-Za-z]+)", 
+                "(~*[A-Za-z]+)(&|>>|\|)(~*[A-Za-z]+)", 
                 wff_str) or
             re.fullmatch(
-                "(" + re.escape(break_down_parentheses(wff_str)) + ")(&|>>|\|)(~{0,1}\([A-Za-z()&|>~]+\))", 
+                "(" + re.escape(break_down_parentheses(wff_str)) + ")(&|>>|\|)(~*\([A-Za-z()&|>~]+\))", 
                 wff_str)
         ):
             match match.group(2):
@@ -225,7 +215,15 @@ class WFF:
                 WFF.from_string(
                     match.group(3)
                 )
-            )  
+            ) 
+        
+        # Pregunta si la fórmula es una negación
+        elif match := (
+            re.fullmatch("~(~*[A-Za-z]+)", wff_str) or
+            re.fullmatch("~(~*\([A-Za-z()&|>~]+\))", wff_str)
+        ):
+            return Neg(WFF.from_string(match.group(1)))   
+    
         
         elif re.fullmatch("\([A-Za-z()&|>~]+\)", wff_str):
             return WFF.from_string(wff_str[1:-1])
