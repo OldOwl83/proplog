@@ -148,6 +148,39 @@ class WFF:
             ) + 1
         
 
+    def get_meaning(self, vars_undefined: bool=True):
+        prev_vals = {var: var.truth_val for var in self.get_symvars()}
+
+        if vars_undefined:
+            mutable_vars = prev_vals.keys()
+
+        else:
+            mutable_vars = [var for var in mutable_vars
+                             if var.truth_val is None]
+        
+        meaning = []
+        
+        for row in range(2**len(mutable_vars)):
+            divisor = 2
+
+            for var in mutable_vars:
+                period = (2 ** len(mutable_vars)) / divisor
+
+                if (row // period) % 2 == 0:
+                    var.truth_val = True
+                else:
+                    var.truth_val = False
+
+                divisor *= 2
+
+            meaning.append(self.truth_val)
+        
+        for var, val in prev_vals.items():
+            var.truth_val = val
+
+        return meaning
+        
+
     ############################## STATIC METHODS #############################
     @staticmethod
     def from_string(wff_str: str):
@@ -321,7 +354,7 @@ class Atom(WFF):
             get_if_exists: bool=False
     ) -> 'Atom':
         if get_if_exists:
-            return Atom._existing_symvars.pop(name, super().__new__(cls))
+            return Atom._existing_symvars.get(name, super().__new__(cls))
         else:
             return super().__new__(cls)
     
@@ -332,8 +365,9 @@ class Atom(WFF):
             truth_val: bool|None=None, 
             get_if_exists: bool=False
     ) -> None:
-        self.name = name    
-        self.truth_val = truth_val
+        if not get_if_exists or name not in Atom._existing_symvars.keys():
+            self.name = name    
+            self.truth_val = truth_val
 
 
     @property

@@ -1,20 +1,23 @@
-import proplog as lp
+import proplog as pl
 import old
+from datetime import datetime as dt
 
-p = lp.Atom('p', True)
+begin = dt.now()
 
-q = lp.Atom('q', False)
+p = pl.Atom('p', True)
 
-r = lp.Atom('r')
+q = pl.Atom('q', False)
 
-# print(p)
-# print(q)
-# print(r)
+r = pl.Atom('r')
 
-f1 = lp.WFF.from_string('((~(q) >> p) & (s | r)) & ((q) | s)')
+print(p)
 
-print(f1.get_symvars())
+f1 = pl.WFF.from_string('((~(q) >> p) & (s | r)) & ((q) | s)')
 
+print(f1.get_meaning())
+
+for var in f1.get_symvars():
+    print(var)
 
 fs = [
     'p >> q',
@@ -47,7 +50,12 @@ fs = [
 
 # for f in fs:
 #     try:
-#         print(f'{f.rjust(40)}   ---->   {str(lp.WFF.from_string(f)).ljust(40)}')
+#         print(f'{f.rjust(40)}   ---->   {str(pl.WFF.from_string(f)).ljust(40)}')
 
 #     except:
 #         print(f'{f.rjust(40)}   ---->   {"Error".ljust(40)}')
+
+
+end = dt.now()
+
+print(f'Tiempo de ejecución: {end - begin}')
