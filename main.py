@@ -5,7 +5,16 @@ p = lp.Atom('p', True)
 
 q = lp.Atom('q', False)
 
-r = lp.Atom('r', True)
+r = lp.Atom('r')
+
+# print(p)
+# print(q)
+# print(r)
+
+f1 = lp.WFF.from_string('((~(q) >> p) & (s | r)) & ((q) | s)')
+
+print(f1.get_symvars())
+
 
 fs = [
     'p >> q',
@@ -42,8 +51,3 @@ fs = [
 
 #     except:
 #         print(f'{f.rjust(40)}   ---->   {"Error".ljust(40)}')
-
-f = lp.WFF.from_string("(((~p >> q) & (q | s)) & (q | s))")
-
-
-print(f)

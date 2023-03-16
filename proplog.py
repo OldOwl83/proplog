@@ -31,8 +31,7 @@ class WFF:
 
     
     def __repr__(self):
-        return (f'proplog.{self.__class__.__name__} object obtainable from '
-                f'proplog.WFF.from_string("{str(self)}")')
+        return (f'proplog.{self.__class__.__name__} object ("{str(self)}")')
     
     def __bool__(self):
         return bool(self.truth_val)
@@ -133,6 +132,9 @@ class WFF:
             if hasattr(self, '_r_wff'):
                 self._r_wff.get_symvars(symvars)
         
+        symvars = list(symvars)
+        symvars.sort()
+
         return symvars
     
 
@@ -385,7 +387,8 @@ class Atom(WFF):
 
 
     def __str__(self):
-        return self.name
+        return self.name + (f'(V)' if self.truth_val 
+                else '(F)' if self.truth_val is not None else '')
 
     #def Imprimir_arbol(self):
     #    print(self, end=" | ")
@@ -404,3 +407,19 @@ class Atom(WFF):
     
     def __len__(self): 
         return 1
+    
+    
+    def __lt__(self, other: 'Atom'):
+        if not isinstance(other, Atom):
+            raise TypeError('An Atom object can only be compared to another '
+                            'Atom object.')
+        
+        return self.name < other.name
+    
+
+    def __gt__(self, other):
+        if not isinstance(other, Atom):
+            raise TypeError('An Atom object can only be compared to another '
+                            'Atom object.')
+        
+        return self.name > other.name
