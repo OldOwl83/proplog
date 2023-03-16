@@ -1,4 +1,4 @@
-import logprop as lp
+import proplog as lp
 import old
 
 p = lp.Atom('p', True)
@@ -43,14 +43,7 @@ fs = [
 #     except:
 #         print(f'{f.rjust(40)}   ---->   {"Error".ljust(40)}')
 
-f = lp.WFF.from_string('((~(p) >> q) & (q | s)) & ((q) | s)')
+f = lp.WFF.from_string("(((~p >> q) & (q | s)) & (q | s))")
 
-sv = [sv.name for sv in f.get_symvars()]
 
-print(sv)
-print(f.get_depth())
-
-# for sv in f.get_symvars():
-#     sv.truth_val = False
-
-print(f.truth_val)
+print(f)

@@ -28,6 +28,11 @@ class WFF:
     ########################### SPECIAL METHODS ###############################
     def __init__(self, l_wff: 'WFF'):
         self._l_wff = l_wff 
+
+    
+    def __repr__(self):
+        return (f'proplog.{self.__class__.__name__} object obtainable from '
+                f'proplog.WFF.from_string("{str(self)}")')
     
     def __bool__(self):
         return bool(self.truth_val)
