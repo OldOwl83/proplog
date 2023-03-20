@@ -1,7 +1,30 @@
 import re
+import gc
 
 
-class WFF: 
+class WFF:
+
+    _existing_wffs: dict[str, 'WFF'] = {}
+
+    # @classmethod
+    # def wff_garbage_collector(cls):
+    #     def recursive_wff_gc(wff):
+    #         cls._existing_wffs.pop(str(wff))
+
+    #         if not isinstance(wff, Atom):
+    #             if len(gc.get_referrers(wff._l_wff)) < 3:
+    #                 recursive_wff_gc(wff._l_wff)
+
+    #             if hasattr(wff, '_r_wff') and len(gc.get_referrers(wff._l_wff)) < 3:
+    #                 recursive_wff_gc(wff._r_wff)
+
+    #     lost_wff = [wff for wff in WFF._existing_wffs.values() 
+    #                 if len(gc.get_referrers(wff)) < 3]
+                
+    #     for wff in lost_wff:
+    #         recursive_wff_gc(wff)
+
+
     ############################# PROPERTIES ##################################
     @property
     def truth_val(self):
@@ -26,13 +49,42 @@ class WFF:
 
 
     ########################### SPECIAL METHODS ###############################
-    def __init__(self, l_wff: 'WFF'):
-        self._l_wff = l_wff 
+    def __new__(
+        cls, 
+        l_wff: 'WFF', 
+        r_wff: 'WFF'=None
+    ):
+        if cls == Impl:
+            wff_string = f"({str(l_wff)} >> {str(r_wff)})"
+        elif cls == Conj:
+            wff_string = f"({str(l_wff)} & {str(r_wff)})"
+        elif cls == Disj:
+            wff_string = f"({str(l_wff)} | {str(r_wff)})"
+        elif cls == Neg:
+            wff_string = f"~{str(l_wff)}"
+        else:
+            raise Exception("This WFF subclass should be added to "
+                            "WFF.__new__ method.")
 
+        return cls._existing_wffs.get(wff_string, super().__new__(cls))
     
+
+    def __init__(self, l_wff: 'WFF', r_wff: 'WFF'):
+        # WFF.wff_garbage_collector()
+
+        if not isinstance(l_wff, WFF) or not isinstance(r_wff, WFF):
+            raise TypeError('l_wff and r_wff arguments must be of WFF type.')
+
+        self._l_wff = l_wff
+        self._r_wff = r_wff
+
+        self._existing_wffs.update({str(self): self})
+
+
     def __repr__(self):
         return (f'proplog.{self.__class__.__name__} object ("{str(self)}")')
     
+
     def __bool__(self):
         return bool(self.truth_val)
     
@@ -138,6 +190,10 @@ class WFF:
         return symvars
     
 
+    def get_subformulas(self, sub_wffs=set()): pass
+
+    
+
     def get_depth(self):
         if isinstance(self, Atom):
             return 1
@@ -148,7 +204,7 @@ class WFF:
             ) + 1
         
 
-    def get_meaning(self, vars_undefined: bool=True):
+    def _get_meaning(self, vars_undefined: bool=True):
         prev_vals = {var: var.truth_val for var in self.get_symvars()}
 
         if vars_undefined:
@@ -179,6 +235,9 @@ class WFF:
             var.truth_val = val
 
         return meaning
+
+    def print_truth_table(self): pass
+
         
 
     ############################## STATIC METHODS #############################
@@ -272,13 +331,7 @@ class WFF:
             raise ValueError(f'"{wff_str}" is not a WFF string representation.')
 
 
-class Impl(WFF):
-    def __init__(self, l_wff: 'WFF', r_wff: 'WFF'):
-        super().__init__(l_wff)
-
-        self._r_wff = r_wff 
-        
-        
+class Impl(WFF):       
     @WFF.truth_val.getter
     def truth_val(self):
         return WFF.truth_val.fget(self) and (
@@ -290,12 +343,6 @@ class Impl(WFF):
     
 
 class Conj(WFF):
-    def __init__(self, l_wff: 'WFF', r_wff: 'WFF'):
-        super().__init__(l_wff)
-
-        self._r_wff = r_wff 
-        
-        
     @WFF.truth_val.getter
     def truth_val(self):
         return WFF.truth_val.fget(self) and (
@@ -307,12 +354,6 @@ class Conj(WFF):
     
 
 class Disj(WFF):
-    def __init__(self, l_wff: 'WFF', r_wff: 'WFF'):
-        super().__init__(l_wff)
-
-        self._r_wff = r_wff 
-        
-
     @WFF.truth_val.getter
     def truth_val(self):
         return WFF.truth_val.fget(self) and (
@@ -324,6 +365,12 @@ class Disj(WFF):
     
 
 class Neg(WFF):
+    def __init__(self, l_wff: 'WFF'):
+        self._l_wff = l_wff
+        
+        self._existing_wffs.update({str(self): self})
+
+    
     @property
     def r_wff(self):
         raise AttributeError('Single-membered formulas has not r_wff attribute.')
@@ -343,10 +390,6 @@ class Neg(WFF):
 
 
 class Atom(WFF):
-
-    _existing_symvars: dict[str, 'Atom'] = {}
-
-
     def __new__(
             cls,
             name: str, 
@@ -354,9 +397,9 @@ class Atom(WFF):
             get_if_exists: bool=False
     ) -> 'Atom':
         if get_if_exists:
-            return Atom._existing_symvars.get(name, super().__new__(cls))
+            return WFF._existing_wffs.get(name, object.__new__(cls))
         else:
-            return super().__new__(cls)
+            return object.__new__(cls)
     
 
     def __init__(
@@ -365,9 +408,10 @@ class Atom(WFF):
             truth_val: bool|None=None, 
             get_if_exists: bool=False
     ) -> None:
-        if not get_if_exists or name not in Atom._existing_symvars.keys():
+        if not get_if_exists or name not in WFF._existing_wffs.keys():
             self.name = name    
-            self.truth_val = truth_val
+        
+        self.truth_val = truth_val
 
 
     @property
@@ -382,14 +426,14 @@ class Atom(WFF):
         elif re.search('[ +*~^<>-]', value):
             raise ValueError('Atom.name should not contain special characters.')
         
-        elif value in Atom._existing_symvars.keys():
+        elif value in WFF._existing_wffs.keys():
             raise AttributeError(f'A Atom object with name {value} already '
                                  'exists. Assign it to create a new reference, '
                                  'or construct it with "get_if_exists" parameter.')
         
         else:
             self._name = value
-            Atom._existing_symvars.update({value: self})
+            WFF._existing_wffs.update({value: self})
 
     @name.deleter
     def name(self):
@@ -411,13 +455,6 @@ class Atom(WFF):
     @truth_val.deleter
     def truth_val(self):
         self._truth_val = None
-
-
-    def __del__(self):
-        if hasattr(self, '_name'):
-            Atom._existing_symvars.pop(self.name)
-
-        del(self)
 
 
     def __str__(self):
