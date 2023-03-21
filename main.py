@@ -16,26 +16,13 @@ s = pl.Atom('p', False, get_if_exists=True)
 
 f1 = pl.WFF.from_string('(p >> q) | r')
 
-print(f1)
-print(pl.WFF._existing_wffs)
-print()
-del(s)
-
-print(pl.WFF._existing_wffs)
-print()
-s1 = str(f1)
 f1 = 'caca'
 
-cualca = pl.Impl(r, p)
-p = q = 'hola'
-
-pepe = pl.Conj(r, r)
-carlos = pl.Disj(r, r)
 print(pl.WFF._existing_wffs)
-print()
 
+pl.WFF.wff_garbage_collector()
 
-
+print(pl.WFF._existing_wffs)
 
 
 
