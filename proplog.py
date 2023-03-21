@@ -209,6 +209,8 @@ class WFF:
     
 
     def get_subformulas(self, sub_wffs: set=set()):
+        main_wff = True if not sub_wffs else False
+
         sub_wffs.add(self)
 
         if hasattr(self, '_l_wff'):
@@ -217,10 +219,9 @@ class WFF:
         if hasattr(self, '_r_wff'):
             self._r_wff.get_subformulas(sub_wffs)
         
-        sub_wffs = list(sub_wffs)
-        sub_wffs.sort()
-        
-        return sub_wffs
+        if main_wff:
+            sub_wffs = sorted(sub_wffs)
+            return sub_wffs
     
 
     def get_depth(self):
@@ -265,9 +266,9 @@ class WFF:
 
         return meaning
 
+
     def print_truth_table(self): pass
 
-        
 
     ############################## STATIC METHODS #############################
     @staticmethod
@@ -538,3 +539,4 @@ class Atom(WFF):
             return self.name >= other.name
         else:
             super().__ge__(other)
+
