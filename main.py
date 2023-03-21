@@ -14,15 +14,12 @@ r = pl.Atom('r')
 s = pl.Atom('p', False, get_if_exists=True)
 
 
-f1 = pl.WFF.from_string('(p >> q) | r')
+f1 = pl.WFF.from_string('((~(p) >> q) & (q | s)) & ((q) | s)')
 
-f1 = 'caca'
+print(f1.get_subformulas())
 
-print(pl.WFF._existing_wffs)
+print(f1 < p)
 
-pl.WFF.wff_garbage_collector()
-
-print(pl.WFF._existing_wffs)
 
 
 

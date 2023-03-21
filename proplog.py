@@ -133,6 +133,34 @@ class WFF:
         else: 
             raise ArithmeticError("Only one of its subformulas can be "
                                   "substracted from a formula.")
+        
+
+    def __lt__(self, other: 'WFF'):
+        if not isinstance(other, WFF):
+            raise TypeError('A WFF can only be compared with another WFF.')
+        
+        return self.get_depth() < other.get_depth()
+    
+
+    def __le__(self, other: 'WFF'):
+        if not isinstance(other, WFF):
+            raise TypeError('A WFF can only be compared with another WFF.')
+        
+        return self.get_depth() <= other.get_depth()
+    
+
+    def __gt__(self, other: 'WFF'):
+        if not isinstance(other, WFF):
+            raise TypeError('A WFF can only be compared with another WFF.')
+        
+        return self.get_depth() > other.get_depth()
+    
+
+    def __ge__(self, other: 'WFF'):
+        if not isinstance(other, WFF):
+            raise TypeError('A WFF can only be compared with another WFF.')
+        
+        return self.get_depth() >= other.get_depth()
 
         
     def __rshift__(self, other: 'WFF'):
@@ -163,7 +191,7 @@ class WFF:
         return Neg(self)
     
 
-    ########################## INSTANCE METHODS ##############################
+    ########################### INSTANCE METHODS ##############################
     def get_symvars(self, symvars: set=set()):
         if isinstance(self, Atom):
             symvars.add(self)
@@ -180,8 +208,19 @@ class WFF:
         return symvars
     
 
-    def get_subformulas(self, sub_wffs=set()): pass
+    def get_subformulas(self, sub_wffs: set=set()):
+        sub_wffs.add(self)
 
+        if hasattr(self, '_l_wff'):
+            self._l_wff.get_subformulas(sub_wffs)
+
+        if hasattr(self, '_r_wff'):
+            self._r_wff.get_subformulas(sub_wffs)
+        
+        sub_wffs = list(sub_wffs)
+        sub_wffs.sort()
+        
+        return sub_wffs
     
 
     def get_depth(self):
@@ -399,7 +438,7 @@ class Atom(WFF):
             get_if_exists: bool=False
     ) -> None:
         WFF.wff_garbage_collector()
-        
+
         if not get_if_exists or name not in WFF._existing_wffs.keys():
             self.name = name    
         
@@ -453,36 +492,49 @@ class Atom(WFF):
         return self.name + (f'(V)' if self.truth_val 
                 else '(F)' if self.truth_val is not None else '')
 
-    #def Imprimir_arbol(self):
-    #    print(self, end=" | ")
 
     def __sub__(self, other):
         raise ArithmeticError("The substraction is not defined for "
                               "single-membered formulas")
 
+
     def __getitem__(self, index):
         raise IndexError("The index do not make sense for "
                          "single-membered formulas")
+
 
     def __setitem__(self, index, subf):
         raise IndexError("The index do not make sense for "
                          "single-membered formulas")
     
+
     def __len__(self): 
         return 1
     
     
-    def __lt__(self, other: 'Atom'):
-        if not isinstance(other, Atom):
-            raise TypeError('An Atom object can only be compared to another '
-                            'Atom object.')
-        
-        return self.name < other.name
+    def __lt__(self, other: 'WFF'):
+        if isinstance(other, Atom):
+            return self.name < other.name
+        else:
+            super().__lt__(other)
+
+
+    def __le__(self, other: 'WFF'):
+        if isinstance(other, Atom):
+            return self.name <= other.name
+        else:
+            super().__le__(other)
     
 
-    def __gt__(self, other):
-        if not isinstance(other, Atom):
-            raise TypeError('An Atom object can only be compared to another '
-                            'Atom object.')
-        
-        return self.name > other.name
+    def __gt__(self, other: 'WFF'):
+        if isinstance(other, Atom):
+            return self.name > other.name
+        else:
+            super().__gt__(other)
+
+
+    def __ge__(self, other: 'WFF'):
+        if isinstance(other, Atom):
+            return self.name >= other.name
+        else:
+            super().__ge__(other)
