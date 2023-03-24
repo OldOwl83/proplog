@@ -139,28 +139,28 @@ class WFF:
         if not isinstance(other, WFF):
             raise TypeError('A WFF can only be compared with another WFF.')
         
-        return self.get_depth() < other.get_depth()
+        return (self.get_depth(), len(self)) < (other.get_depth(), len(other))
     
 
     def __le__(self, other: 'WFF'):
         if not isinstance(other, WFF):
             raise TypeError('A WFF can only be compared with another WFF.')
         
-        return self.get_depth() <= other.get_depth()
+        return (self.get_depth(), len(self)) <= (other.get_depth(), len(other))
     
 
     def __gt__(self, other: 'WFF'):
         if not isinstance(other, WFF):
             raise TypeError('A WFF can only be compared with another WFF.')
         
-        return self.get_depth() > other.get_depth()
+        return (self.get_depth(), len(self)) > (other.get_depth(), len(other))
     
 
     def __ge__(self, other: 'WFF'):
         if not isinstance(other, WFF):
             raise TypeError('A WFF can only be compared with another WFF.')
         
-        return self.get_depth() >= other.get_depth()
+        return (self.get_depth(), len(self)) >= (other.get_depth(), len(other))
 
         
     def __rshift__(self, other: 'WFF'):
@@ -193,6 +193,8 @@ class WFF:
 
     ########################### INSTANCE METHODS ##############################
     def get_symvars(self, symvars: set=set()):
+        main_wff = True if not symvars else False
+
         if isinstance(self, Atom):
             symvars.add(self)
 
@@ -202,10 +204,8 @@ class WFF:
             if hasattr(self, '_r_wff'):
                 self._r_wff.get_symvars(symvars)
         
-        symvars = list(symvars)
-        symvars.sort()
-
-        return symvars
+        if main_wff:
+            return sorted(symvars)
     
 
     def get_subformulas(self, sub_wffs: set=set()):
@@ -220,18 +220,14 @@ class WFF:
             self._r_wff.get_subformulas(sub_wffs)
         
         if main_wff:
-            sub_wffs = sorted(sub_wffs)
-            return sub_wffs
+            return sorted(sub_wffs)
     
 
     def get_depth(self):
-        if isinstance(self, Atom):
-            return 1
-        else: 
-            return max(
-                self._l_wff.get_depth(),
-                self._r_wff.get_depth() if hasattr(self, '_r_wff') else 0
-            ) + 1
+        return max(
+            self._l_wff.get_depth(),
+            self._r_wff.get_depth() if hasattr(self, '_r_wff') else 0
+        ) + 1
         
 
     def _get_meaning(self, vars_undefined: bool=True):
@@ -455,8 +451,9 @@ class Atom(WFF):
         if not isinstance(value, str):
             raise TypeError('Atom.name must be of str type.')
         
-        elif re.search('[ +*~^<>-]', value):
-            raise ValueError('Atom.name should not contain special characters.')
+        elif re.search('[ +*~^<>-]', value) or re.match('^[0-9]', value):
+            raise ValueError('Atom.name should not contain special characters'
+                             'or start with a number.')
         
         elif value in WFF._existing_wffs.keys():
             raise AttributeError(f'A Atom object with name {value} already '
@@ -517,26 +514,30 @@ class Atom(WFF):
         if isinstance(other, Atom):
             return self.name < other.name
         else:
-            super().__lt__(other)
+            return super().__lt__(other)
 
 
     def __le__(self, other: 'WFF'):
         if isinstance(other, Atom):
             return self.name <= other.name
         else:
-            super().__le__(other)
+            return super().__le__(other)
     
 
     def __gt__(self, other: 'WFF'):
         if isinstance(other, Atom):
             return self.name > other.name
         else:
-            super().__gt__(other)
+            return super().__gt__(other)
 
 
     def __ge__(self, other: 'WFF'):
         if isinstance(other, Atom):
             return self.name >= other.name
         else:
-            super().__ge__(other)
+            return super().__ge__(other)
+
+    
+    def get_depth(self):
+        return 1
 

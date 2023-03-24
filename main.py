@@ -5,7 +5,7 @@ import sys
 
 begin = dt.now()
 
-p = pl.Atom('p', True)
+p = pl.Atom('p1', True)
 
 q = pl.Atom('q', False)
 
@@ -14,12 +14,9 @@ r = pl.Atom('r')
 s = pl.Atom('p', False, get_if_exists=True)
 
 
-f1 = pl.WFF.from_string('((~(p) >> q) & (q | s)) & ((q) | s)')
+f1 = pl.WFF.from_string('(((p) >> q) & (q | s)) & (((q) | s) >> rodo)')
 
-print(f1.get_subformulas())
-
-print(f1 < p)
-
+print(p > f1)
 
 
 
