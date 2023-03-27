@@ -1,4 +1,4 @@
-import proplog as pl
+import module.proplog as pl
 import old
 from datetime import datetime as dt
 import sys
