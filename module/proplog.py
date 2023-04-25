@@ -190,6 +190,21 @@ class WFF:
     def __invert__(self):
         return Neg(self)
     
+    
+    def __iter__(self):
+        print('hola')
+        if isinstance(self, Atom):
+            yield self
+            print('atom')
+        else:
+            self._l_wff.__iter__()
+            print('l_wff')
+            yield self
+
+            if hasattr(self, '_r_wff'):
+                self._r_wff.__iter__()
+                yield self
+              
 
     ########################### INSTANCE METHODS ##############################
     # TODO: En llamadas posteriores, este método retorna None, porque el parámetro
