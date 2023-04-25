@@ -192,6 +192,9 @@ class WFF:
     
 
     ########################### INSTANCE METHODS ##############################
+    # TODO: En llamadas posteriores, este método retorna None, porque el parámetro
+    # symvars asume su último valor en la llamada anterior, y por tanto, 
+    # main_wff nunca llega a ser True
     def get_symvars(self, symvars: set=set()):
         main_wff = True if not symvars else False
 
@@ -207,8 +210,11 @@ class WFF:
         if main_wff:
             return sorted(symvars)
     
-
+    # TODO: En llamadas posteriores, este método retorna None, porque el parámetro
+    # symvars asume su último valor en la llamada anterior, y por tanto, 
+    # main_wff nunca llega a ser True
     def get_subformulas(self, sub_wffs: set=set()):
+        print(sub_wffs)
         main_wff = True if not sub_wffs else False
 
         sub_wffs.add(self)
@@ -264,6 +270,20 @@ class WFF:
 
 
     def print_truth_table(self): pass
+
+
+    def get_truthfullness(self):
+        meaning = self._get_meaning()
+        
+        if all(meaning):
+            return 'tautology'
+        
+        elif not any(meaning):
+            return 'contradiction'
+        
+        else:
+            return 'contingency'
+        
 
 
     ############################## STATIC METHODS #############################

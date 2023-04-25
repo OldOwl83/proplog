@@ -16,7 +16,13 @@ s = pl.Atom('p', False, get_if_exists=True)
 
 f1 = pl.WFF.from_string('(((p) >> q) & (q | s)) & (((q) | s) >> rodo)')
 
-print(p > f1)
+f2 = pl.WFF.from_string('p & ~p')
+
+print(f2.get_subformulas())
+print('======================================')
+print(f2.get_subformulas())
+
+print(f2)
 
 
 
