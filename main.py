@@ -1,4 +1,4 @@
-import proplog as pl
+import module.proplog as pl
 import old
 from datetime import datetime as dt
 import sys
@@ -16,8 +16,16 @@ s = pl.Atom('p', False, get_if_exists=True)
 
 f1 = pl.WFF.from_string('(((p) >> q) & (q | s)) & (((q) | s) >> rodo)')
 
-print(p > f1)
+f2 = pl.WFF.from_string('p & ~p')
 
+# print(f1[0])
+# print(f1[1])
+# print(list(f1))
+# print(f1.get_symvars())
+# print(f1.get_subformulas())
+# print(f1.get_truthfullness())
+
+print(f1.print_truth_table())
 
 
 

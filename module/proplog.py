@@ -190,38 +190,28 @@ class WFF:
     def __invert__(self):
         return Neg(self)
     
+    
+    def __iter__(self):
+        sub_wffs = [self]
 
-    ########################### INSTANCE METHODS ##############################
-    def get_symvars(self, symvars: set=set()):
-        main_wff = True if not symvars else False
-
-        if isinstance(self, Atom):
-            symvars.add(self)
-
-        else:
-            self._l_wff.get_symvars(symvars)
+        if not isinstance(self, Atom):
+            sub_wffs += self._l_wff.__iter__()
 
             if hasattr(self, '_r_wff'):
-                self._r_wff.get_symvars(symvars)
-        
-        if main_wff:
-            return sorted(symvars)
+                sub_wffs += self._r_wff.__iter__()
+
+        return iter(sub_wffs)
+
+    
+    ########################### INSTANCE METHODS ##############################
+    
+    def get_symvars(self):
+        return sorted(set([wff for wff in self if isinstance(wff, Atom)]))
     
 
-    def get_subformulas(self, sub_wffs: set=set()):
-        main_wff = True if not sub_wffs else False
+    def get_subformulas(self):
+        return sorted(set([wff for wff in self]))
 
-        sub_wffs.add(self)
-
-        if hasattr(self, '_l_wff'):
-            self._l_wff.get_subformulas(sub_wffs)
-
-        if hasattr(self, '_r_wff'):
-            self._r_wff.get_subformulas(sub_wffs)
-        
-        if main_wff:
-            return sorted(sub_wffs)
-    
 
     def get_depth(self):
         return max(
@@ -264,6 +254,20 @@ class WFF:
 
 
     def print_truth_table(self): pass
+
+
+    def get_truthfullness(self):
+        meaning = self._get_meaning()
+        
+        if all(meaning):
+            return 'tautology'
+        
+        elif not any(meaning):
+            return 'contradiction'
+        
+        else:
+            return 'contingency'
+        
 
 
     ############################## STATIC METHODS #############################
