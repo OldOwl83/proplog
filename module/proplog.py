@@ -253,9 +253,7 @@ class WFF:
         return meaning
 
 
-    def print_truth_table(self):
-        for wff in self.get_subformulas():
-            print(wff, ': ', wff._get_meaning())
+    def print_truth_table(self): pass
 
 
     def get_truthfullness(self):
