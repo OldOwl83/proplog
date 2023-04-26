@@ -18,11 +18,14 @@ f1 = pl.WFF.from_string('(((p) >> q) & (q | s)) & (((q) | s) >> rodo)')
 
 f2 = pl.WFF.from_string('p & ~p')
 
-print(f1.get_subformulas())
-print('==================')
-for f in f1:
-    print(f)
+# print(f1[0])
+# print(f1[1])
+# print(list(f1))
+# print(f1.get_symvars())
+# print(f1.get_subformulas())
+# print(f1.get_truthfullness())
 
+print(f1.print_truth_table())
 
 
 

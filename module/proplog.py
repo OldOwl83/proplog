@@ -191,44 +191,26 @@ class WFF:
         return Neg(self)
     
     
-    #def __iter__(self): pass
-
-    
-              
-
-    ########################### INSTANCE METHODS ##############################
-    # TODO: En llamadas posteriores, este método retorna None, porque el parámetro
-    # symvars asume su último valor en la llamada anterior, y por tanto, 
-    # main_wff nunca llega a ser True
-    def get_symvars(self, symvars: set=set()):
-        main_wff = True if not symvars else False
-
-        if isinstance(self, Atom):
-            symvars.add(self)
-
-        else:
-            self._l_wff.get_symvars(symvars)
-
-            if hasattr(self, '_r_wff'):
-                self._r_wff.get_symvars(symvars)
-        
-        if main_wff:
-            return sorted(symvars)
-    
-    # TODO: En llamadas posteriores, este método retorna None, porque el parámetro
-    # symvars asume su último valor en la llamada anterior, y por tanto, 
-    # main_wff nunca llega a ser True
-    def get_subformulas(self):
-        
-        sub_wffs = set(self)
+    def __iter__(self):
+        sub_wffs = [self]
 
         if not isinstance(self, Atom):
-            sub_wffs |= set(self._l_wff.get_subformulas())
+            sub_wffs += self._l_wff.__iter__()
 
             if hasattr(self, '_r_wff'):
-                sub_wffs |= set(self._r_wff.get_subformulas())
+                sub_wffs += self._r_wff.__iter__()
 
-        return sorted(sub_wffs)
+        return iter(sub_wffs)
+
+    
+    ########################### INSTANCE METHODS ##############################
+    
+    def get_symvars(self):
+        return sorted(set([wff for wff in self if isinstance(wff, Atom)]))
+    
+
+    def get_subformulas(self):
+        return sorted(set([wff for wff in self]))
 
 
     def get_depth(self):
@@ -271,7 +253,9 @@ class WFF:
         return meaning
 
 
-    def print_truth_table(self): pass
+    def print_truth_table(self):
+        for wff in self.get_subformulas():
+            print(wff, ': ', wff._get_meaning())
 
 
     def get_truthfullness(self):
