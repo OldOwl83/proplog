@@ -18,11 +18,10 @@ f1 = pl.WFF.from_string('(((p) >> q) & (q | s)) & (((q) | s) >> rodo)')
 
 f2 = pl.WFF.from_string('p & ~p')
 
-print(f2.get_subformulas())
-print('======================================')
-print(f2.get_subformulas())
-
-print(f2)
+print(f1.get_subformulas())
+print('==================')
+for f in f1:
+    print(f)
 
 
 

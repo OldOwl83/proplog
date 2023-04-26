@@ -191,19 +191,9 @@ class WFF:
         return Neg(self)
     
     
-    def __iter__(self):
-        print('hola')
-        if isinstance(self, Atom):
-            yield self
-            print('atom')
-        else:
-            self._l_wff.__iter__()
-            print('l_wff')
-            yield self
+    #def __iter__(self): pass
 
-            if hasattr(self, '_r_wff'):
-                self._r_wff.__iter__()
-                yield self
+    
               
 
     ########################### INSTANCE METHODS ##############################
@@ -228,21 +218,18 @@ class WFF:
     # TODO: En llamadas posteriores, este método retorna None, porque el parámetro
     # symvars asume su último valor en la llamada anterior, y por tanto, 
     # main_wff nunca llega a ser True
-    def get_subformulas(self, sub_wffs: set=set()):
-        print(sub_wffs)
-        main_wff = True if not sub_wffs else False
-
-        sub_wffs.add(self)
-
-        if hasattr(self, '_l_wff'):
-            self._l_wff.get_subformulas(sub_wffs)
-
-        if hasattr(self, '_r_wff'):
-            self._r_wff.get_subformulas(sub_wffs)
+    def get_subformulas(self):
         
-        if main_wff:
-            return sorted(sub_wffs)
-    
+        sub_wffs = set(self)
+
+        if not isinstance(self, Atom):
+            sub_wffs |= set(self._l_wff.get_subformulas())
+
+            if hasattr(self, '_r_wff'):
+                sub_wffs |= set(self._r_wff.get_subformulas())
+
+        return sorted(sub_wffs)
+
 
     def get_depth(self):
         return max(
