@@ -220,17 +220,17 @@ class WFF:
         ) + 1
         
 
-    def _get_meaning(self, vars_undefined: bool=True):
+    def get_truth_table(self, vars_undefined: bool=True):
         prev_vals = {var: var.truth_val for var in self.get_symvars()}
 
         if vars_undefined:
-            mutable_vars = prev_vals.keys()
+            mutable_vars = self.get_symvars()
 
         else:
-            mutable_vars = [var for var in mutable_vars
+            mutable_vars = [var for var in self.get_symvars()
                              if var.truth_val is None]
         
-        meaning = []
+        table = {wff: [] for wff in self.get_subformulas()}
         
         for row in range(2**len(mutable_vars)):
             divisor = 2
@@ -245,19 +245,20 @@ class WFF:
 
                 divisor *= 2
 
-            meaning.append(self.truth_val)
+            for wff, value_list in table.items():
+                value_list.append(wff.truth_val)
         
         for var, val in prev_vals.items():
             var.truth_val = val
 
-        return meaning
+        return table
 
 
     def print_truth_table(self): pass
 
 
     def get_truthfullness(self):
-        meaning = self._get_meaning()
+        meaning = self.get_truth_table()[self]
         
         if all(meaning):
             return 'tautology'
@@ -442,8 +443,9 @@ class Atom(WFF):
 
         if not get_if_exists or name not in WFF._existing_wffs.keys():
             self.name = name    
-        
-        self.truth_val = truth_val
+            self.truth_val = truth_val
+        elif truth_val is not None:
+            raise ValueError('Truth value cannot be set if you get an existing Atom.')
 
 
     @property

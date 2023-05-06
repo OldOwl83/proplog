@@ -5,27 +5,23 @@ import sys
 
 begin = dt.now()
 
-p = pl.Atom('p1', True)
+p = pl.Atom('p', True)
 
 q = pl.Atom('q', False)
 
 r = pl.Atom('r')
 
-s = pl.Atom('p', False, get_if_exists=True)
+s = pl.Atom('p1', None, get_if_exists=True)
 
 
 f1 = pl.WFF.from_string('(((p) >> q) & (q | s)) & (((q) | s) >> rodo)')
 
 f2 = pl.WFF.from_string('p & ~p')
 
-# print(f1[0])
-# print(f1[1])
-# print(list(f1))
-# print(f1.get_symvars())
-# print(f1.get_subformulas())
-# print(f1.get_truthfullness())
+f3 = pl.WFF.from_string('p >> (~p >> q)')
 
-print(f1.print_truth_table())
+print(f3.get_truthfullness())
+
 
 
 
