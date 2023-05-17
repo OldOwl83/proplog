@@ -1,5 +1,8 @@
 import re
 import gc
+from typing import Literal
+
+import plotly.graph_objects as go
 
 
 class WFF:
@@ -80,7 +83,8 @@ class WFF:
     
 
     def __len__(self):
-        return len(self._l_wff) + (len(self._r_wff) if hasattr(self, '_r_wff') else 0) + 1
+        return len(self._l_wff) + (len(self._r_wff) 
+                                   if hasattr(self, '_r_wff') else 0) + 1
     
 
     def __getitem__(self, index: int):
@@ -254,7 +258,26 @@ class WFF:
         return table
 
 
-    def print_truth_table(self): pass
+    def get_truth_table_html(self):
+        truth_table = self.get_truth_table()
+        
+        fig = go.Figure(
+            data=[
+                go.Table(
+                    header=dict(
+                        values=[str(wff) for wff in truth_table.keys()],
+                        fill_color='paleturquoise',
+                        align='left'    
+                    ),
+                    cells=dict(
+                        values=list(truth_table.values()),
+                        fill_color='lavender',
+                        align='left'
+                    )
+                )
+            ]
+        )
+        return fig.to_html()
 
 
     def get_truthfullness(self):
