@@ -20,7 +20,9 @@ f2 = pl.WFF.from_string('p & ~p')
 
 f3 = pl.WFF.from_string('p >> (~p >> q)')
 
-print(f2.get_truth_table_html())
+
+with open('img.svg', 'wb') as file:
+    file.write(f1.get_truth_table_image(format='svg', width=1000, height=600))
         
 
 

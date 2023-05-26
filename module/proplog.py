@@ -1,5 +1,6 @@
 import re
 from weakref import WeakValueDictionary as Wdict
+from typing import Literal
 
 import plotly.graph_objects as go
 
@@ -251,7 +252,14 @@ class WFF:
         return table
 
 
-    def get_truth_table_html(self):
+    def get_truth_table_image(
+        self,
+        format: Literal['png', 'jpg', 'jpeg', 'svg']='png',
+        width: int|None=None,
+        height: int|None=None,
+        scale: int|None=1,
+        engine: Literal['kaleido', 'orca', 'auto']='auto'
+    ):
         truth_table = self.get_truth_table()
         
         fig = go.Figure(
@@ -266,11 +274,19 @@ class WFF:
                         values=list(truth_table.values()),
                         fill_color='lavender',
                         align='left'
-                    )
+                    ),
+                    columnwidth=[len(wff) + 1 for wff in truth_table.keys()]
                 )
             ]
         )
-        return fig.to_html()
+
+        return fig.to_image(
+                format=format,
+                width=width,
+                height=height,
+                scale=scale,
+                engine=engine
+            )
 
 
     def get_truthfullness(self):
