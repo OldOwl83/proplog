@@ -20,10 +20,7 @@ f2 = pl.WFF.from_string('p & ~p')
 
 f3 = pl.WFF.from_string('p >> (~p >> q)')
 
-for i, f in enumerate([f1, f2, f3]):
-    
-    with open(f't{i}.html', 'w', encoding="utf-8") as file:
-        file.write(f.get_truth_table_image())
+print(f2.get_truth_table_html())
         
 
 
@@ -31,6 +28,7 @@ for i, f in enumerate([f1, f2, f3]):
 # file.write(f1.get_truth_table_image())
 
 # file.close()
+# print(f3.get_truthfullness())
 
 
 
