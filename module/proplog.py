@@ -1,18 +1,10 @@
 import re
-import gc
+from weakref import WeakValueDictionary as Wdict
 
 
 class WFF:
 
-    _existing_wffs: dict[str, 'WFF'] = {}
-
-    @classmethod
-    def wff_garbage_collector(cls):
-        
-        while lost_wff := [string for string, wff in WFF._existing_wffs.items() 
-                    if len(gc.get_referrers(wff)) < 3]:   
-            for wff in lost_wff:
-                WFF._existing_wffs.pop(wff)
+    _existing_wffs: dict[str, 'WFF'] = Wdict()
 
 
     ############################# PROPERTIES ##################################
@@ -52,6 +44,10 @@ class WFF:
             wff_string = f"({str(l_wff)} | {str(r_wff)})"
         elif cls == Neg:
             wff_string = f"~{str(l_wff)}"
+        elif cls == WFF:
+            raise Exception("A WFF class object can only be instantiated "
+                            "through a subclass, or through the "
+                            "WFF.from_string() method.")
         else:
             raise Exception("This WFF subclass should be added to "
                             "WFF.__new__ method.")
@@ -60,8 +56,6 @@ class WFF:
     
 
     def __init__(self, l_wff: 'WFF', r_wff: 'WFF'):
-        WFF.wff_garbage_collector()
-
         if not isinstance(l_wff, WFF) or not isinstance(r_wff, WFF):
             raise TypeError('l_wff and r_wff arguments must be of WFF type.')
 
@@ -439,8 +433,6 @@ class Atom(WFF):
             truth_val: bool|None=None, 
             get_if_exists: bool=False
     ) -> None:
-        WFF.wff_garbage_collector()
-
         if not get_if_exists or name not in WFF._existing_wffs.keys():
             self.name = name    
             self.truth_val = truth_val

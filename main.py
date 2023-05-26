@@ -13,14 +13,15 @@ r = pl.Atom('r')
 
 s = pl.Atom('p1', None, get_if_exists=True)
 
+f1 = pl.WFF(p, q)
 
-f1 = pl.WFF.from_string('(((p) >> q) & (q | s)) & (((q) | s) >> rodo)')
+# f1 = pl.WFF.from_string('(((p) >> q) & (q | s)) & (((q) | s) >> rodo)')
 
-f2 = pl.WFF.from_string('p & ~p')
+# f2 = pl.WFF.from_string('p & ~p')
 
-f3 = pl.WFF.from_string('p >> (~p >> q)')
+# f3 = pl.WFF.from_string('p >> (~p >> q)')
 
-print(f3.get_truthfullness())
+# print(f3.get_truthfullness())
 
 
 
